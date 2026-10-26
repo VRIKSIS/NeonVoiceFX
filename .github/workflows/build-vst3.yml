@@ -1,0 +1,39 @@
+
+name: Build NeonVoiceFX VST3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract plugin source
+        shell: pwsh
+        run: |
+          Expand-Archive -Path NeonVoiceFX_OnlineBuild.zip -DestinationPath plugin-src
+
+      - name: Checkout JUCE
+        uses: actions/checkout@v4
+        with:
+          repository: juce-framework/JUCE
+          path: plugin-src/JUCE
+
+      - name: Configure
+        run: cmake -B plugin-src/build -S plugin-src -A x64
+
+      - name: Build VST3
+        run: cmake --build plugin-src/build --config Release --target NeonVoiceFX_VST3
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeonVoiceFX-Windows-VST3
+          path: plugin-src/build/NeonVoiceFX_artefacts/Release/VST3/**
+          if-no-files-found: error
