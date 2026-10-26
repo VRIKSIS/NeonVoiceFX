@@ -1,5 +1,19 @@
 
-name: Build NeonVoiceFX VST3
+
+      - name: Extract plugin source
+        shell: pwsh
+        run: |
+          Expand-Archive -Path NeonVoiceFX_OnlineBuild_v2.zip -DestinationPath plugin-src
+          $cmakeFile = Get-ChildItem plugin-src -Filter CMakeLists.txt -Recurse | Select-Object -First 1
+          if (-not $cmakeFile) {
+            Get-ChildItem plugin-src -Recurse
+            throw "CMakeLists.txt not found in ZIP archive"
+          }
+          $sourceDir = $cmakeFile.Directory.FullName
+          $rootDir = (Resolve-Path plugin-src).Path
+          if ($sourceDir -ne $rootDir) {
+            Get-ChildItem $sourceDir -Force | Move-Item -Destination $rootDir -Force
+          }
 
 on:
   workflow_dispatch:
